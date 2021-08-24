@@ -15,4 +15,4 @@
 ---
 dependencies:
   - role: cloudera.cluster.cloudera_manager.api_hosts
-
+  - role: cloudera.cluster.deployment.definition

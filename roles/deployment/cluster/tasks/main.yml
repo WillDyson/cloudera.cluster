@@ -48,6 +48,7 @@
   include_tasks: create_base.yml
   loop: "{{ definition.clusters }}"
   loop_control:
+    label: "{{ cluster.name }}"
     loop_var: _cluster
   vars:
     cluster: "{{ default_cluster_base | combine(_cluster) }}"
@@ -59,6 +60,7 @@
   include_tasks: create_data_context.yml
   loop: "{{ definition.clusters }}"
   loop_control:
+    label: "{{ cluster.name }}"
     loop_var: _cluster
   vars:
     cluster: "{{ default_cluster_base | combine(_cluster) }}"
@@ -70,6 +72,7 @@
   include_tasks: create_kts.yml
   loop: "{{ definition.clusters }}"
   loop_control:
+    label: "{{ cluster.name }}"
     loop_var: _cluster
   vars:
     cluster: "{{ default_cluster_kts | combine(_cluster) }}"
@@ -82,6 +85,7 @@
   include_tasks: create_base.yml
   loop: "{{ definition.clusters }}"
   loop_control:
+    label: "{{ cluster.name }}"
     loop_var: _cluster
   vars:
     cluster: "{{ default_cluster_compute | combine(_cluster) }}"

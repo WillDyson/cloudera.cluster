@@ -17,12 +17,14 @@
 # Inventory specific
 - block:
     - set_fact:
-        has_tls: >-
+        has_explicit_tls: >-
           {{
           definition
           | json_query('clusters[?security.tls]')
           | length > 0
           }}
+    - set_fact:
+        has_tls: "{{ has_explicit_tls or autotls | default(False) }}"
     - name: Ensure that TLS distribution is configured in the inventory
       assert:
         that: "{{ hostvars | dict2items | json_query('[?value.tls]') | length > 0 }}"
@@ -45,7 +47,16 @@
         that: "{{ definition.mgmt.security.tls | default(false) }}"
         success_msg: "TLS is configured for the mgmt cluster"
         fail_msg: "TLS should be configured for the mgmt cluster"
-      when: has_tls
+      when: has_explicit_tls
+    - name: Ensure that AutoTLS and explicit TLS are not configured together
+      assert:
+        that: "{{ not (autotls | default(False)) }}"
+        success_msg: "AutoTLS and explicit TLS are not configured together"
+        fail_msg: >-
+            AutoTLS and explicit TLS are both configured.
+            Please unset autotls or remove tls from the cluster
+            definition.
+      when: has_explicit_tls
 
 - block:
     - set_fact:

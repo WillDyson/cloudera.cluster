@@ -1,18 +1,18 @@
-{
-  "location": "",
-  "customCA": false,
-  "interpretAsFilenames": true,
-  "cmHostCert": "",
-  "cmHostKey": "",
-  "caCert": "",
-  "keystorePasswd": "",
-  "truststorePasswd": "",
-  "trustedCaCerts": "",
-  "hostCerts": [],
-  "configureAllServices": true,
-  "sshPort": 22,
-  "userName": "{{ host_ssh_username }}",
-  "password": "{{ host_ssh_password }}",
-  "privateKey": "",
-  "passphrase": ""
-}
+location: "{{ base_dir_security }}/autotls"
+customCA: "true"
+interpretAsFilenames: true
+cmHostCert: "{{ autotls_temp_dir.path }}/{{ groups.cloudera_manager | first }}.pem"
+cmHostKey: "{{ autotls_temp_dir.path }}/{{ groups.cloudera_manager | first }}.key"
+caCert: "{{ autotls_temp_dir.path }}/chain.pem"
+keystorePasswd: "{{ autotls_temp_dir.path }}/key.pw"
+truststorePasswd: "{{ autotls_temp_dir.path }}/truststore.pw"
+hostCerts:
+{% for host in groups.cluster %}
+  - hostname: "{{ host }}"
+    certificate: "{{ autotls_temp_dir.path }}/{{ host }}.pem"
+    key: "{{ autotls_temp_dir.path }}/{{ host }}.key"
+{% endfor %}
+configureAllServices: true
+sshPort: 22
+userName: "{{ autotls_host_username }}"
+password: "{{ autotls_host_password }}"

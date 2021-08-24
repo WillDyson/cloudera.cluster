@@ -23,11 +23,96 @@
     msg: This playbook requires Cloudera Manager 7.1+
   when: response.json.version is version('7.1', '<')
 
+- fail:
+    msg: >-
+      You must specify autotls_host_username 
+      and autotls_host_password when autotls is configured
+  when: >-
+    autotls_host_username is not defined
+    or autotls_host_password is not defined
+- fail:
+    msg: >-
+      You must set tls to true for each host or
+      set manual_tls_cert_distribution to true if
+      you are handling TLS certificate distribution
+      outside of the playbook
+  when:
+    - not (manual_tls_cert_distribution | default (False))
+    - not (tls | default(False))
+
+- name: Create the AutoTLS directory for Cloudera Manager
+  file:
+    path: "{{ base_dir_security }}/autotls"
+    owner: cloudera-scm
+    group: cloudera-scm
+    mode: '0700'
+  when: "'cloudera_manager' in group_names"
+
+- name: Create a temporary location for the host keys and certificates
+  tempfile:
+    state: directory
+    suffix: autotls
+  register: autotls_temp_dir
+  run_once: True
+  when: "'cloudera_manager' in group_names"
+
+- name: Copy the host certificate
+  slurp:
+    src: "{{ tls_cert_path }}"
+  register: host_certificate
+
+- name: Copy the host key
+  slurp:
+    src: "{{ tls_key_path }}"
+  register: host_key
+
+- name: Write the host certificate to the temporary directory
+  copy:
+    content: "{{ host_certificate['content'] | b64decode }}"
+    dest: "{{ autotls_temp_dir.path }}/{{ inventory_hostname }}.pem"
+  delegate_to: "{{ groups.cloudera_manager | first }}"
+
+- name: Write the host key to the temporary directory
+  copy:
+    content: "{{ host_key['content'] | b64decode }}"
+    dest: "{{ autotls_temp_dir.path }}/{{ inventory_hostname }}.key"
+  delegate_to: "{{ groups.cloudera_manager | first }}"
+
+- name: Copy the key password to the temporary directory
+  copy:
+    content: "{{ tls_key_password }}"
+    dest: "{{ autotls_temp_dir.path }}/key.pw"
+  when: "'cloudera_manager' in group_names"
+
+- name: Copy the truststore password to the temporary directory
+  copy:
+    content: "{{ tls_truststore_password }}"
+    dest: "{{ autotls_temp_dir.path }}/truststore.pw"
+  when: "'cloudera_manager' in group_names"
+
+- name: Copy the chain certificate to the temporary directory
+  copy:
+    src: "{{ tls_chain_path }}"
+    dest: "{{ autotls_temp_dir.path }}/chain.pem"
+    remote_src: yes
+  when: "'cloudera_manager' in group_names"
+
+- name: Set permissions for temporary directory
+  file:
+    path: "{{ autotls_temp_dir.path }}"
+    state: directory
+    recurse: yes
+    owner: cloudera-scm
+    group: cloudera-scm
+  when: "'cloudera_manager' in group_names"
+
 - name: Enable Auto-TLS
   cloudera.cluster.cm_api:
     endpoint: /cm/commands/generateCmca
     method: POST
-    body: "{{ lookup('template', 'request.j2', convert_data=False) }}"
+    body: "{{ lookup('template', 'request.j2', convert_data=False) | from_yaml | to_json }}"
+  run_once: True
+  when: "'cloudera_manager' in group_names"
 
 - name: Restart Cloudera Manager Server
   service:
@@ -35,11 +120,8 @@
     state: restarted
   notify:
     - wait cloudera-scm-server
+  when: "'cloudera_manager' in group_names"
 
 - name: Wait for Cloudera Manager Server to come back up
   meta: flush_handlers
-
-- name: Restart Cloudera Management Service
-  cloudera.cluster.cm_api:
-    endpoint: /cm/service/commands/restart
-    method: POST
+  when: "'cloudera_manager' in group_names"

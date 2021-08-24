@@ -39,6 +39,12 @@
     - "'MGMT' not in api_cm_service_response.content"
     - "'CMS instance already exists' not in api_cm_service_response.content"
 
+- name: Update Cloudera Management Service defaults
+  cm_api:
+    endpoint: /cm/service/autoConfigure
+    method: PUT
+    status_code: 204
+
 - name: Start Cloudera Management Service
   cloudera.cluster.cm_api:
     endpoint: /cm/service/commands/restart

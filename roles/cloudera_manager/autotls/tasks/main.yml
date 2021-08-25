@@ -46,6 +46,7 @@
     owner: cloudera-scm
     group: cloudera-scm
     mode: '0700'
+    state: directory
   when: "'cloudera_manager' in group_names"
 
 - name: Create a temporary location for the host keys and certificates

@@ -25,14 +25,6 @@
 
 - fail:
     msg: >-
-      You must specify autotls_host_username 
-      and autotls_host_password when autotls is configured
-  when: >-
-    autotls_host_username is not defined
-    or autotls_host_password is not defined
-
-- fail:
-    msg: >-
       You must set tls to true for each host or
       set manual_tls_cert_distribution to true if
       you are handling TLS certificate distribution
@@ -52,6 +44,13 @@
     query: 'items[?name == `AUTO_TLS_TYPE` && value == `ALL`]'
 
 - block:
+  - fail:
+      msg: >-
+        You must specify autotls_host_username 
+        and autotls_host_password when autotls is configured
+    when: >-
+      autotls_host_username is not defined
+      or autotls_host_password is not defined
 
   - name: Create the AutoTLS directory for Cloudera Manager
     file:

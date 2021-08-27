@@ -16,10 +16,7 @@
 - name: Create temp directory for keys
   file:
     path: "{{ local_temp_dir }}/kms"
-    owner: root
-    group: root
     state: directory
-    mode: 0777
 
 - name: Fetch keys from first KMS server
   delegate_to: "{{ groups.kms_servers | first }}"

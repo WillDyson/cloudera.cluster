@@ -18,3 +18,5 @@ custom_config_templates:
   - template: configs/defaults.j2
   - template: configs/tls.j2
     condition: "{{ cluster.security.tls | default(False) }}"
+  - template: configs/autotls.j2
+    condition: "{{ autotls | default(False) }}"

@@ -14,5 +14,4 @@
 
 ---
 
-host_ssh_username: root
-host_ssh_password: cloudera
+autotls_generate_timeout: 300

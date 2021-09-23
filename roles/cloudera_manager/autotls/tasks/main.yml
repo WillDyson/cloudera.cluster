@@ -124,6 +124,7 @@
       endpoint: /cm/commands/generateCmca
       method: POST
       body: "{{ lookup('template', 'request.j2', convert_data=False) | from_yaml | to_json }}"
+      timeout: "{{ autotls_generate_timeout | default(omit) }}"
     run_once: True
     when: "'cloudera_manager' in group_names"
 

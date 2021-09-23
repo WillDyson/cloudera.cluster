@@ -39,7 +39,7 @@
   register: response
 
 - set_fact:
-    autotls_enabled_already: "{{ response.json | json_query(query) | default([]) | length > 0 }}"
+    autotls_disabled: "{{ response.json | json_query(query) | default([]) | length == 0 }}"
   vars:
     query: 'items[?name == `AUTO_TLS_TYPE` && value == `ALL`]'
 
@@ -139,4 +139,4 @@
     meta: flush_handlers
     when: "'cloudera_manager' in group_names"
 
-  when: not autotls_enabled_already
+  when: autotls_force_rotate | default(False) or autotls_disabled

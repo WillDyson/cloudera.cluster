@@ -25,25 +25,45 @@
       - groups.kts_active is defined
     fail_msg: "Cluster type kts not present or expected kts_active and kts_passive not present"
 
+- name: List the files on cctive Key Trustee Server
+  become: yes
+  delegate_to: "{{ groups.kts_active | first }}"
+  find:
+    paths: "{{ keytrustee_server_conf_dir }}"
+    recurse: yes
+  register: kts_active_find_result
+
+- name: Extract non-SSL files from the active Key Trustee Server listing
+  set_fact:
+    kts_active_path_list: "{{ kts_active_find_result | json_query('files[? !(contains(path, `.ssl`))].path') }}"
+
 - name: Create temp directory for keys
-  file:
-    path: "{{ local_temp_dir }}/kts"
-    owner: root
-    group: root
+  tempfile:
     state: directory
-    mode: 0777
+    suffix: kts
+  register: kts_temp_location
+
+- name: Protect the temp directory
+  file:
+    path: "{{ kts_temp_location.path }}"
+    state: directory
+    mode: 0700
 
 - name: Fetch GPG keys and configs from active Key Trustee Server
   delegate_to: "{{ groups.kts_active | first }}"
+  become: yes
   fetch:
-    src: "{{ keytrustee_server_conf_dir }}/{{ item }}"
-    dest: "{{ local_temp_dir }}/kts"
-  loop: "{{ keytrustee_server_key_files }}"
+    src: "{{ kts_file_path }}"
+    dest: "{{ kts_temp_location.path }}/{{ kts_file_path | regex_replace(keytrustee_conf_path) }}"
+  loop: "{{ kts_active_path_list }}"
+  loop_control:
+    loop_var: kts_file_path
 
 - name: Copy to passive Key Trustee Server
   delegate_to: "{{ groups.kts_passive | first }}"
+  become: yes
   copy:
-    src: "{{ local_temp_dir }}/kts/{{ inventory_hostname }}{{ keytrustee_server_conf_dir }}/"
+    src: "{{ kts_temp_location.path }}/"
     dest: "{{ keytrustee_server_conf_dir }}"
     owner: keytrustee
     group: keytrustee
@@ -51,10 +71,11 @@
 
 - name: Delete temp directory
   file:
-    path: "{{ local_temp_dir }}/kts"
+    path: "{{ kts_temp_location.path }}"
     state: absent
 
 - name: Initialize passive Key Trustee Server
+  become: yes
   delegate_to: "{{ groups.kts_passive | first }}"
   shell: ktadmin init --confdir {{ keytrustee_server_conf_dir }}
 
@@ -77,6 +98,7 @@
   when: kts_cluster.name is defined
 
 - name: Create Key Trustee Server organisation
+  become: yes
   delegate_to: "{{ groups.kts_active | first }}"
   shell: >
     keytrustee-orgtool add

@@ -35,9 +35,10 @@
     method: PUT
     body: "{{ lookup('template', 'service.j2', convert_data=False) }}"
   register: api_cm_service_response
-  failed_when:
-    - "'MGMT' not in api_cm_service_response.content"
-    - "'CMS instance already exists' not in api_cm_service_response.content"
+  failed_when: >-
+    api_cm_service_response.failed
+    or ('MGMT' not in api_cm_service_response.content
+    and 'CMS instance already exists' not in api_cm_service_response.content)
 
 - name: Start Cloudera Management Service
   cloudera.cluster.cm_api:

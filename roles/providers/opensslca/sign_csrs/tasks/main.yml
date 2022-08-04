@@ -1,1 +1,55 @@
+# Copyright 2021 Cloudera, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 ---
+
+- name: Retrieve the contents of the CSRs
+  ansible.builtin.slurp:
+    src: "{{ cldr_tls_csr_path }}"
+  register: _tls_csr
+
+- name: Write the CSR to the CA server
+  ansible.builtin.copy:
+    content: "{{ _tls_csr['content'] | b64decode }}"
+    dest: "{{ cldr_tls_provider_opensslca_intermediate_path_csr }}/{{ inventory_hostname }}.csr"
+  delegate_to: "{{ groups.tls_servers | first }}"
+
+- name: Sign CSRs
+  ansible.builtin.shell:
+    executable: /bin/bash
+    cmd: >
+      exec 100>/tmp/cldr_tls_provider_opensslca.lock;
+      flock 100 &&
+      {{ cldr_tls_openssl_path }} ca
+      -batch
+      -config {{ cldr_tls_provider_opensslca_intermediate_path }}/openssl.cnf
+      -extensions cloudera_req
+      -days 730
+      -notext
+      -md sha256
+      -in {{ cldr_tls_provider_opensslca_intermediate_path_csr }}/{{ inventory_hostname }}.csr
+      -out {{ cldr_tls_provider_opensslca_intermediate_path_certs }}/{{ inventory_hostname }}.pem
+      -passin pass:{{ cldr_tls_provider_opensslca_root_key_password }}
+    creates: "{{ cldr_tls_provider_opensslca_intermediate_path_certs }}/{{ inventory_hostname }}.pem"
+  delegate_to: "{{ groups.tls_servers | first }}"
+
+- name: Retrieve the contents of the certificates
+  ansible.builtin.slurp:
+    src: "{{ cldr_tls_provider_opensslca_intermediate_path_certs }}/{{ inventory_hostname }}.pem"
+  register: _tls_cert
+
+- name: Copy the certificate to the host
+  ansible.builtin.copy:
+    content: "{{ _tls_cert['content'] | b64decode }}"
+    dest: "{{ cldr_tls_certificate_path }}"

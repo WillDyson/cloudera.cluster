@@ -3,3 +3,25 @@ cldr_tls_provider_ca_certificates:
   local_path: '{{ cldr_tls_base_path }}/rootca.pem'
 - alias: 'cluster_intca'
   local_path: '{{ cldr_tls_base_path }}/intca.pem'
+cldr_tls_provider_opensslca_root_path: /ca
+cldr_tls_provider_opensslca_root_path_certs: "{{ cldr_tls_provider_opensslca_root_path }}/certs"
+cldr_tls_provider_opensslca_root_path_crl: "{{ cldr_tls_provider_opensslca_root_path }}/crl"
+cldr_tls_provider_opensslca_root_path_newcerts: "{{ cldr_tls_provider_opensslca_root_path }}/newcerts"
+cldr_tls_provider_opensslca_root_path_private: "{{ cldr_tls_provider_opensslca_root_path }}/private"
+cldr_tls_provider_opensslca_root_key_name: ca.key.pem
+cldr_tls_provider_opensslca_root_key_size: 4096
+cldr_tls_provider_opensslca_root_cert_name: ca.cert.pem
+cldr_tls_provider_opensslca_root_cert_path: "{{ cldr_tls_provider_opensslca_root_path_certs }}/{{ cldr_tls_provider_opensslca_root_cert_name }}"
+cldr_tls_provider_opensslca_root_key_password: password
+cldr_tls_provider_opensslca_intermediate_path: /ca/intermediate
+cldr_tls_provider_opensslca_intermediate_path_certs: "{{ cldr_tls_provider_opensslca_intermediate_path }}/certs"
+cldr_tls_provider_opensslca_intermediate_path_crl: "{{ cldr_tls_provider_opensslca_intermediate_path }}/crl"
+cldr_tls_provider_opensslca_intermediate_path_csr: "{{ cldr_tls_provider_opensslca_intermediate_path }}/csr"
+cldr_tls_provider_opensslca_intermediate_path_newcerts: "{{ cldr_tls_provider_opensslca_intermediate_path }}/newcerts"
+cldr_tls_provider_opensslca_intermediate_path_private: "{{ cldr_tls_provider_opensslca_intermediate_path }}/private"
+cldr_tls_provider_opensslca_intermediate_key_password: password
+cldr_tls_provider_opensslca_intermediate_cert_name: intermediate.cert.pem
+cldr_tls_provider_opensslca_intermediate_cert_path: "{{ cldr_tls_provider_opensslca_intermediate_path_certs }}/{{ cldr_tls_provider_opensslca_intermediate_cert_name }}"
+cldr_tls_provider_opensslca_chain_cert_name: ca-chain.cert.pem
+cldr_tls_provider_opensslca_chain_cert_path: "{{ cldr_tls_provider_opensslca_intermediate_path_certs }}/{{ cldr_tls_provider_opensslca_chain_cert_name }}"
+cldr_tls_provider_opensslca_attrs_general: "{{ cldr_tls_attrs_general }}"

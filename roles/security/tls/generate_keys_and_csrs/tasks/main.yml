@@ -1,0 +1,136 @@
+# Copyright 2021 Cloudera, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+---
+
+- name: Prepare directories for TLS
+  file:
+    state: directory
+    path: "{{ dir }}"
+    mode: 0755
+    owner: root
+  loop:
+    - "{{ cldr_tls_base_path }}"
+  loop_control:
+    loop_var: dir
+
+- name: Generate certificate attribute list
+  set_fact:
+    _subject_attr: "{{ lookup('template', 'certificate_dn.j2') | from_yaml }}"
+
+- name: Generate certificate attribute arguments
+  set_fact:
+    _openssl_subject: "/{{ _subject_attr | map('regex_replace', '/', '\\/') | join('/') }}"
+    _keytool_subject: "{{ _subject_attr | map('regex_replace', ',', '\\,') | join(',') }}"
+
+- name: Create Java keystore
+  shell:
+    cmd: >
+      {{ cldr_tls_keytool_path }}
+      -genkeypair
+      -alias {{ cldr_tls_keystore_alias | default(cldr_tls_fqdn) }}
+      -keyalg RSA
+      -keystore {{ cldr_tls_keystore_path }}
+      -keysize 2048
+      -dname "{{ _keytool_subject }}"
+      -ext san=dns:{{ cldr_tls_fqdn }}
+      -storetype JKS
+      -storepass {{ cldr_tls_key_password }}
+      -keypass {{ cldr_tls_key_password }}
+    creates: "{{ cldr_tls_keystore_path }}"
+
+- name: Verify that JKS contains a private key
+  shell:
+    cmd: >
+      {{ cldr_tls_keytool_path }}
+      -list
+      -keystore {{ cldr_tls_keystore_path }}
+      -alias {{ cldr_tls_keystore_alias | default(cldr_tls_fqdn) }}
+      -storepass {{ cldr_tls_key_password }} | grep PrivateKeyEntry
+  changed_when: False
+
+- name: Export temporary PKCS12 keystore
+  shell:
+    cmd: >
+      {{ cldr_tls_keytool_path }}
+      -importkeystore
+      -srckeystore {{ cldr_tls_keystore_path }}
+      -destkeystore {{ cldr_tls_base_path }}/{{ cldr_tls_fqdn }}.p12
+      -deststoretype PKCS12
+      -srcstorepass {{ cldr_tls_key_password }}
+      -srckeypass {{ cldr_tls_key_password }}
+      -deststorepass {{ cldr_tls_key_password }}
+      -destkeypass {{ cldr_tls_key_password }}
+      -srcalias {{ cldr_tls_keystore_alias | default(cldr_tls_fqdn) }}
+      -destalias {{ cldr_tls_keystore_alias | default(cldr_tls_fqdn) }}
+    creates: "{{ cldr_tls_base_path }}/{{ cldr_tls_fqdn }}.p12"
+
+- name: Export private key
+  shell:
+    cmd: >
+      {{ cldr_tls_openssl_path }} pkcs12
+      -in {{ cldr_tls_base_path }}/{{ cldr_tls_fqdn }}.p12
+      -out {{ cldr_tls_key_path }}
+      -passin pass:{{ cldr_tls_key_password }}
+      -passout pass:{{ cldr_tls_key_password }}
+      -nocerts
+    creates: "{{ cldr_tls_key_path }}"
+
+- name: Delete temporary PKCS12 keystore
+  file:
+    path: "{{ cldr_tls_base_path }}/{{ cldr_tls_fqdn }}.p12"
+    state: absent
+
+- name: Write key password to file
+  shell:
+    cmd: echo -n {{ cldr_tls_key_password }} > {{ cldr_tls_key_password_file }}
+    creates: "{{ cldr_tls_key_password_file }}"
+
+- name: Write unencrypted key
+  shell:
+    cmd: >
+      {{ cldr_tls_openssl_path }} rsa
+      -in {{ cldr_tls_key_path }}
+      -passin pass:{{ cldr_tls_key_password }}
+      -out {{ cldr_tls_key_path_plaintext }}
+    creates: "{{ cldr_tls_key_path_plaintext }}"
+
+- name: Create host agnostic links
+  file:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    state: hard
+  with_items:
+    - { src: "{{ cldr_tls_keystore_path }}", dest: "{{ cldr_tls_keystore_path_generic }}" }
+    - { src: "{{ cldr_tls_key_path }}", dest: "{{ cldr_tls_key_path_generic }}" }
+    - { src: "{{ cldr_tls_key_path_plaintext }}", dest: "{{ cldr_tls_key_path_plaintext_generic }}" }
+
+- name: Create openssl.cnf for CSR generation
+  template:
+    src: csr.cnf.j2
+    dest: "{{ cldr_tls_csr_config_path }}"
+    owner: root
+    mode: 0644
+
+- name: Generate CSR
+  shell:
+    cmd: >
+      {{ cldr_tls_openssl_path }} req
+      -key {{ cldr_tls_key_path }}
+      -passin pass:{{ cldr_tls_key_password }}
+      -subj "{{ _openssl_subject }}"
+      -config {{ cldr_tls_csr_config_path }}
+      -new
+      -out {{ cldr_tls_csr_path }}
+    creates: "{{ cldr_tls_csr_path }}"

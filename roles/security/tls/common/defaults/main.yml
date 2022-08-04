@@ -1,0 +1,56 @@
+# Copyright 2021 Cloudera, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+---
+
+cldr_tls_fqdn: "{{ inventory_hostname }}"
+cldr_tls_san:
+- "{{ inventory_hostname }}"
+cldr_tls_keytool_path: /usr/bin/keytool
+cldr_tls_openssl_path: /usr/bin/openssl
+cldr_tls_base_path: /opt/cloudera/security/pki
+cldr_tls_jdk_java_cacerts_search_paths:
+- /etc/pki/java
+- /etc/ssl/certs/java
+- /usr/java/default/jre/lib/security
+- /usr/java/default/jre/conf/security
+- /usr/lib/jvm/jre/lib/security
+- /usr/lib/jvm/jre/conf/security
+- /etc/java-8-openjdk/security
+- /etc/java-11-openjdk/security
+- /usr/lib64/jvm/java-1.8.0-openjdk-1.8.0/jre/lib/security
+cldr_tls_key_path_plaintext_generic: /opt/cloudera/security/pki/host.unenc.key
+cldr_tls_key_path_generic: /opt/cloudera/security/pki/host.key
+cldr_tls_keystore_path_generic: /opt/cloudera/security/pki/host.jks
+cldr_tls_truststore_path: /opt/cloudera/security/pki/truststore.jks
+cldr_tls_uber_truststore_path: /opt/cloudera/security/pki/full_truststore.jks
+cldr_tls_users: []
+cldr_tls_certificate_path: "/opt/cloudera/security/pki/{{ inventory_hostname }}.pem"
+cldr_tls_csr_config_path: /opt/cloudera/security/pki/csr.cnf
+cldr_tls_key_path: "/opt/cloudera/security/pki/{{ inventory_hostname }}.key"
+cldr_tls_key_path_plaintext: "/opt/cloudera/security/pki/{{ inventory_hostname }}.unenc.key"
+cldr_tls_key_password_file: "/opt/cloudera/security/pki/host.pwd"
+cldr_tls_csr_path: "/opt/cloudera/security/pki/{{ inventory_hostname }}.csr"
+cldr_tls_keystore_path: "/opt/cloudera/security/pki/{{ inventory_hostname }}.jks"
+cldr_tls_keystore_alias: "{{ inventory_hostname }}"
+cldr_tls_ca_chain_path: /opt/cloudera/security/pki/chain.pem
+cldr_tls_jdk_java_cacerts_password: changeit
+cldr_tls_skip_cacerts_import: false
+cldr_tls_attrs_general:
+  OU: PS
+  O: Cloudera, Inc.
+  ST: CA
+  C: US
+cldr_tls_key_password: changeme
+cldr_tls_truststore_password: changeme

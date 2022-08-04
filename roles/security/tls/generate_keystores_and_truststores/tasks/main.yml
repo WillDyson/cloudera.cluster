@@ -30,7 +30,7 @@
 - name: Install signed certificate reply into keystore
   shell:
     cmd: >
-      {{ keytool_path }}
+      {{ cldr_tls_keytool_path }}
       -importcert
       -alias "{{ cldr_tls_keystore_alias }}"
       -file "{{ cldr_tls_certificate_path }}"
@@ -65,6 +65,11 @@
     owner: root
     group: root
     mode: "0644"
+
+- name: Generate certificate chain file
+  shell:
+    cmd: "cat {{ cldr_tls_provider_ca_certificates | json_query('[*].local_path') | join(' ') }} > {{ cldr_tls_ca_chain_path }}"
+    creates: "{{ cldr_tls_ca_chain_path }}"
 
 - name: Update chain certificate permissions
   file:
@@ -126,7 +131,7 @@
 - name: Merge the truststores
   shell:
     cmd: >
-      {{ keytool_path }}
+      {{ cldr_tls_keytool_path }}
       -importkeystore
       -srckeystore "{{ cldr_tls_truststore_path }}"
       -destkeystore "{{ cldr_tls_uber_truststore_path }}"

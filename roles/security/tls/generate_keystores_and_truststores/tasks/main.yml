@@ -100,7 +100,7 @@
     file_type: any
   register: _java_cacerts
   when:
-    - tls_cldr_jdk_java_cacerts_location is not defined
+    - cldr_tls_jdk_java_cacerts_location is not defined
     - not cldr_tls_skip_cacerts_import
 
 - fail:
@@ -110,7 +110,7 @@
       or set cldr_tls_skip_cacerts_import to true.
   when:
     - not cldr_tls_skip_cacerts_import
-    - tls_cldr_jdk_java_cacerts_location is not defined
+    - cldr_tls_jdk_java_cacerts_location is not defined
     - _java_cacerts.matched == 0
     - "'cloudera_manager' in group_names"
 

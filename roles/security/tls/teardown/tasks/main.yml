@@ -16,7 +16,7 @@
 
 - name: Import teardown module from TLS provider
   ansible.builtin.include_role:
-    name: "cloudera.cluster.providers.{{ cldr_tls_provider }}.teardown"
+    name: "cloudera.cluster.providers.{{ cldr_tls_provider }}.tls_teardown"
     public: yes
   when: cldr_tls_provider is defined
 

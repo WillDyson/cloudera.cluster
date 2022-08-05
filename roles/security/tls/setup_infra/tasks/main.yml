@@ -16,7 +16,7 @@
 
 - name: Import setup module from TLS provider
   ansible.builtin.include_role:
-    name: "cloudera.cluster.providers.{{ cldr_tls_provider }}.setup"
+    name: "cloudera.cluster.providers.{{ cldr_tls_provider }}.setup_infra"
     public: yes
   when: cldr_tls_provider is defined
 

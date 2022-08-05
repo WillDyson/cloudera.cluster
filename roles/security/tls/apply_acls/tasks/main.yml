@@ -25,8 +25,8 @@
     state: file
     path: "{{ cldr_tls_keystore_path }}"
     mode: 0640
-    owner: root
-    group: hadoop
+    owner: "{{ cldr_tls_user_owner }}"
+    group: "{{ cldr_tls_group_owner }}"
 
 - name: Add ACLs to keystore
   acl:
@@ -35,7 +35,7 @@
     etype: group
     permissions: r
     state: present
-  loop: "{{ local_accounts | json_query('[?@.keystore_acl]') }}"
+  loop: "{{ cldr_tls_local_accounts | json_query('[?@.keystore_acl]') }}"
   loop_control:
     loop_var: account
     label: "{{ account.user }}"
@@ -46,8 +46,8 @@
     state: file
     path: "{{ cldr_tls_keystore_path_generic }}"
     mode: 0640
-    owner: root
-    group: hadoop
+    owner: "{{ cldr_tls_user_owner }}"
+    group: "{{ cldr_tls_group_owner }}"
 
 - name: Add ACLs to keystore hard link
   acl:
@@ -56,7 +56,7 @@
     etype: group
     permissions: r
     state: present
-  loop: "{{ local_accounts | json_query('[?@.keystore_acl]') }}"
+  loop: "{{ cldr_tls_local_accounts | json_query('[?@.keystore_acl]') }}"
   loop_control:
     loop_var: account
     label: "{{ account.user }}"
@@ -66,9 +66,9 @@
   file:
     state: file
     path: "{{ path }}"
-    mode: 0440
-    owner: root
-    group: root
+    mode: 0400
+    owner: "{{ cldr_tls_user_owner }}"
+    group: "{{ cldr_tls_group_owner }}"
   loop:
     - "{{ cldr_tls_key_path }}"
     - "{{ cldr_tls_key_path_generic }}"
@@ -82,7 +82,7 @@
     etype: group
     permissions: r
     state: present
-  loop: "{{ cldr_users_local_accounts | json_query('[?@.key_acl]') }}"
+  loop: "{{ cldr_tls_local_accounts | json_query('[?@.key_acl]') }}"
   loop_control:
     loop_var: account
     label: "{{ account.user }}"
@@ -95,7 +95,7 @@
     etype: group
     permissions: r
     state: present
-  loop: "{{ cldr_users_local_accounts | json_query('[?@.key_acl]') }}"
+  loop: "{{ cldr_tls_local_accounts | json_query('[?@.key_acl]') }}"
   loop_control:
     loop_var: account
     label: "{{ account.user }}"
@@ -105,9 +105,9 @@
   file:
     state: file
     path: "{{ cldr_tls_key_password_file }}"
-    mode: 0440
-    owner: root
-    group: root
+    mode: 0400
+    owner: "{{ cldr_tls_user_owner }}"
+    group: "{{ cldr_tls_group_owner }}"
 
 - name: Add ACLs to key password file
   acl:
@@ -116,7 +116,7 @@
     etype: user
     permissions: r
     state: present
-  loop: "{{ cldr_users_local_accounts | json_query('[?@.key_password_acl]') }}"
+  loop: "{{ cldr_tls_local_accounts | json_query('[?@.key_password_acl]') }}"
   loop_control:
     loop_var: account
     label: "{{ account.user }}"
@@ -126,9 +126,9 @@
   file:
     state: file
     path: "{{ path }}"
-    mode: 0440
-    owner: root
-    group: root
+    mode: 0400
+    owner: "{{ cldr_tls_user_owner }}"
+    group: "{{ cldr_tls_group_owner }}"
   loop:
     - "{{ cldr_tls_key_path_plaintext }}"
     - "{{ cldr_tls_key_path_plaintext_generic }}"
@@ -142,7 +142,7 @@
     etype: group
     permissions: r
     state: present
-  loop: "{{ cldr_users_local_accounts | json_query('[?@.unencrypted_key_acl]') }}"
+  loop: "{{ cldr_tls_local_accounts | json_query('[?@.unencrypted_key_acl]') }}"
   loop_control:
     loop_var: account
     label: "{{ account.user }}"
@@ -155,7 +155,7 @@
     etype: group
     permissions: r
     state: present
-  loop: "{{ cldr_users_local_accounts | json_query('[?@.unencrypted_key_acl]') }}"
+  loop: "{{ cldr_tls_local_accounts | json_query('[?@.unencrypted_key_acl]') }}"
   loop_control:
     loop_var: account
     label: "{{ account.user }}"

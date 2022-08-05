@@ -48,6 +48,7 @@
   ansible.builtin.slurp:
     src: "{{ cldr_tls_provider_opensslca_intermediate_path_certs }}/{{ inventory_hostname }}.pem"
   register: _tls_cert
+  delegate_to: "{{ groups.tls_servers | first }}"
 
 - name: Copy the certificate to the host
   ansible.builtin.copy:
